@@ -1342,3 +1342,96 @@ const double* (*(*pd)[3])(const double*, int);
 
 注意`pa`和`&pa`的差别，`pa`是第一个数组元素的地址，即`pa == &pa[0]`。但是`&pa`则为整个数组的地址，从数字上说，pa和&pa相等，但它们的类型有本质上的差别。一种差别是`pa+1`为数组下一个元素的地址，`&pa+`为数组后面一块与该数组内存相同的内存块的地址。要获得第一个数组元素的值，使用pa的方法是`*pa`，使用&pa的方法是`**(&pa)`。
 
+```C++
+#include <iostream>
+
+const double* f1(const double ar[], int n);
+const double* f2(const double[], int);
+const double* f3(const double*, int);
+
+int main()
+{
+    double av[3] = { 1112.3, 1542.6, 2227.9 };
+
+    // 指向函数的指针
+    const double* (*p1)(const double*, int) = f1;
+    auto p2 = f2;
+
+    // (*p1)(av, 3) 返回函数返回的指针
+    // *(*p1)(av, 3) 返回函数返回的指针指向的double值
+    // p2(av,3) 返回函数返回的指针
+    // (*p2)(av, 3) 返回函数返回的指针
+    // *p2(av, 3) 返回函数返回的指针指向的double值
+    std::cout << "Using pointers to functions:\n";
+    std::cout << " Address Value\n";
+    std::cout << (*p1)(av, 3) << ": " << *(*p1)(av, 3) << std::endl;
+    std::cout << p2(av, 3) << ": " << *p2(av, 3) << std::endl;
+
+    // pa是一个包含指针的数组,auto关键字不能用于列表初始化
+    const double* (*pa[3])(const double*, int) = { f1, f2, f3 };
+    // auto对于单值初始化时是可行的，这里pa代表数组第一个元素的地址
+    auto pb = pa;
+    std::cout << "\nUsing an array of pointers to functions:\n";
+    std::cout << " Address Value\n";
+    for (int i = 0; i < 3; i++)
+        std::cout << pa[i](av, 3) << ": " << *pa[i](av, 3) << std::endl;
+    std::cout << "\nUsing an array of pointers to functions:\n";
+    std::cout << " Address Value\n";
+    for (int i = 0; i < 3; i++)
+        std::cout << pb[i](av, 3) << ": " << *pb[i](av, 3) << std::endl;
+
+    // 指向数组的指针，在数字上与该数组第一个元素的地址相同
+    std::cout << "\nUsing pointers to an array of pointers:\n";
+    std::cout << "Address Value\n";
+    auto pc = &pa;
+    // 一样const double* (*(*pc))[3])(const double*, int) = &pa;
+    std::cout << (*pc)[0](av, 3) << ": " << *(*pc)[0](av, 3) << std::endl;
+    const double* (*(*pd)[3])(const double*, int) = &pa;
+    const double* pdb = (*pd)[1](av, 3);
+    std::cout << pdb << ": " << *pdb << std::endl;
+    std::cout << (*(*pd)[2])(av, 3) << ": " << *(*(*pd)[2])(av, 3) << std::endl;
+    std::cin.get();
+    return 0;
+}
+
+const double* f1(const double ar[], int n)
+{
+    return ar;
+}
+
+const double* f2(const double ar[], int n)
+{
+    return ar + 1;
+}
+
+const double* f3(const double* ar, int n)
+{
+    return ar + 2;
+}
+```
+
+```
+Using pointers to functions:
+ Address Value
+0000001D7FAFF698: 1112.3
+0000001D7FAFF6A0: 1542.6
+
+Using an array of pointers to functions:
+ Address Value
+0000001D7FAFF698: 1112.3
+0000001D7FAFF6A0: 1542.6
+0000001D7FAFF6A8: 2227.9
+
+Using an array of pointers to functions:
+ Address Value
+0000001D7FAFF698: 1112.3
+0000001D7FAFF6A0: 1542.6
+0000001D7FAFF6A8: 2227.9
+
+Using pointers to an array of pointers:
+Address Value
+0000001D7FAFF698: 1112.3
+0000001D7FAFF6A0: 1542.6
+0000001D7FAFF6A8: 2227.9
+```
+
