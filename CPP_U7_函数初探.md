@@ -1,5 +1,3 @@
-[toc]
-
 # 函数
 
 ## 1 如何使用函数
@@ -1049,7 +1047,7 @@ void recurs(argumentlist)
 
 如上，只要if语句的条件判断为true，那么函数将会 一直以循环的方式执行`statements1`，而不会执行`statements2`；只有当条件判断为false，递归终止，并且执行语句`statements2`。此时程序将跳回上一级递归调用，执行`statements2`，逐层执行，知道回到最初的函数，递归结束，示意图如下：
 
-<img src="C:\Users\19816\AppData\Roaming\Typora\typora-user-images\image-20250623170253217.png" alt="image-20250623170253217" style="zoom: 67%;" />
+<img src="D:\JiangLe\CPP_Note\figures\image-20250623170253217.png" alt="image-20250623170253217" style="zoom: 67%;" />
 
 ```C++
 // recur.cpp -- using recursion
@@ -1173,7 +1171,7 @@ int mid = (low + high) / 2;
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 ```
 
-<img src="C:\Users\19816\AppData\Roaming\Typora\typora-user-images\image-20250623182309086.png" alt="image-20250623182309086" style="zoom: 67%;" />
+<img src="D:\JiangLe\CPP_Note\figures\image-20250623182309086.png" alt="image-20250623182309086" style="zoom: 67%;" />
 
 递归调用方式对标尺进行了6次划分，一共需要填充$2^6 = 64$个变量，这种增长速度将不断导致函数调用数翻倍，即需要的内存空间不断翻倍，因此如果要求递归层次很多，这种递归方式是一种很糟糕的选择。
 
