@@ -1433,3 +1433,16 @@ Address Value
 0000001D7FAFF6A8: 2227.9
 ```
 
+### 10.4 使用`typedef`进行简化代码
+
+关键字`typedef`可以创建类别的别名，之后使用该类别时可以大大简化代码量。
+
+```C++
+typedef const double *(*p_fun)(const double*, int);
+// p_fun 代表一个类型，该类型通过上面的语句定义，以后创建该类型的变量时，只需要使用这种类似声明的语句
+// 就可以为类型取一个别名
+p_fun p1 = f1;
+p_fun pa[3] = {f1, f2, f3};
+p_fun (*pd)[3] = &pa;
+```
+
