@@ -592,10 +592,373 @@ delete pt
 
 #### 8.2.5 将引用用于类对象
 
-#### 8.2.6 对象、继承和引用
+下面例子创建一个函数，将指定的字符串加入到另一个字符串的前面和后面。下述程序提供了三个这样的函数，然而其中一个存在很大的缺陷，甚至导致程序崩溃无法运行。
+
+```C++
+#include <iostream>
+#include <string>
+
+using namespace std;
+string version_1(const string& s1, const string& s2);
+// 传入一个指向string的const引用s1，和一个指向string的const引用s2，返回一个string类对象。
+const string& version_2(string& s1, const string& s2);
+// 传入一个指向string的引用s1，和一个指向string的const引用s2，返回一个指向string的const引用。
+const string& version_3(string& s1, const string& s2);
+// 传入一个指向string的引用s1，和一个指向string的const引用s2，返回一个指向string的const引用。
+
+int main()
+{
+    // 创建三个string对象。
+    string input;
+    string copy;
+    string result;
+
+    cout << "Enter a string: ";
+    getline(cin, input);
+    copy = input;
+    cout << "Your string as entered: " << input << endl;
+    result = version_1(input, "***");
+    // version_1 返回一个临时值，这个值被存储在result中
+    cout << "Your string enhanced: " << result << endl;
+    cout << "Your original string: " << input << endl;
+
+    result = version_2(input, "###");
+    // version_2 返回修改后的input，通过const指针实现
+    cout << "Your string enhanced: " << result << endl;
+    cout << "Your original string: " << input << endl;
+
+    cout << "Resetting original string.\n";
+    input = copy;
+    result = version_3(input, "###");
+    // version_3 返回一个临时变量的引用，但是由于该临时变量在函数结束后就失效了，因此出现错误
+    cout << "Your string enhanced: " << result << endl;
+    cout << "Your original string: " << input << endl;
+
+    return 0;
+}
+
+string version_1(const string& s1, const string& s2)
+{
+    string temp;
+    temp = s2 + s1 + s2;
+    return temp;
+}
+
+const string& version_2(string& s1, const string& s2)
+{
+    s1 = s2 + s1 + s2;
+    return s1;
+}
+
+const string& version_3(string& s1, const string& s2)
+{
+    string temp;
+    temp = s2 + s1 + s2;
+    return temp;
+}
+```
+
+返回如下：
+
+```
+Enter a string: jiangle
+Your string as entered: jiangle
+Your string enhanced: ***jiangle***
+Your original string: jiangle
+Your string enhanced: ###jiangle###
+Your original string: ###jiangle###
+Resetting original string.
+Your string enhanced:
+Your original string: jiangle
+```
+
+版本1的函数，将s1和s2传入函数，这个值均作为只读值，无法修改，返回一个常规的string变量。相较于`string version_4(string s1, string s2)`将引用作为参数，函数的运行速度更快。
+
+```
+string version_1(const string& s1, const string& s2)
+{
+    string temp;
+    temp = s2 + s1 + s2;
+    return temp;
+}
+```
+
+将C风格字符串用于string对象引用参数
+
+对于函数version_1，可以看到该函数的两个形参(s1和s2)的类型均为const string&，但实参的类型分别为string和const char*。由于input的类型为string，有哪次让s1指向它没有任何问题。单数对于const char * 是如何解决的呢？
+
+这里有两点需要说明。首先，string类定义了一种能够将char * 转换为string的功能，这使得可以使用C风格字符串来初始化string对象。其次，之前讨论过，假设实参的类型与引用参数类型不同，但是可以相互转换，C++会创建一个正确类型的临时变量，使用转换后的实参值来初始化它，然后传递一个指向该临时变量的引用。
+
+```
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+void tran(const string & a);
+
+int main()
+{
+	cout << "The address of C-style-string is: " << &"***" << endl;
+	tran("***");
+
+	string a = "***";
+	cout << "The address of string class object is: " << &a << endl;
+	tran(a);
+
+	return 0;
+}
+
+void tran(const string & a)
+{
+	cout << "The address inside the function is: " << &a << endl;
+}
+```
+
+这一段代码输出如下：
+
+```
+The address of C-style-string is: 00007FF617B42948
+The address inside the function is: 00000027172FF8F8
+The address of string class object is: 00000027172FF7F8
+The address inside the function is: 00000027172FF7F8
+```
+
+当实参和形参类型不一致，但是可以相互转换时，程序会自动创建一个转换好类型的临时变量，并令引用指向该临时变量。这也说明了当传入C风格的字符串时，函数内外输出的地址不同，而当类型正确时，输出的地址则是相同的。
+
+版本2的函数不创建临时string对象，而是直接修改原来的string对象，并将其作为返回值。由于该函数可以修改s1，因此并没有使用一个const引用指向它。但是，该函数会修改输入值s1，因此要保持与原来的字符串不变，这种函数的写法是错误的。
+
+- 当类型不匹配但可以隐式转换时，编译器会创建临时对象
+- 临时对象是新创建的对象，所以地址不同
+- 对于引用参数，临时对象的**生命周期？？？**会延长到函数调用结束
+- 当类型完全匹配时，直接传递引用，不会创建临时对象
+
+```
+const string& version_2(string& s1, const string& s2)
+{
+    s1 = s2 + s1 + s2;
+    return s1;
+}
+```
+
+版本3的函数，将一个指向函数内临时变量的const引用返回，这个函数虽然能够通过编译，但是程序会试图引用已经释放的内存，虽然在更高级的C++版本中可能修复了程序崩溃的问题，但这个问题仍然是要避免的。
+
+```
+const string& version_3(string& s1, const string& s2)
+{
+    string temp;
+    temp = s2 + s1 + s2;
+    return temp;
+}
+```
+
+#### 8.2.6 何时使用引用参数
+
+* 原因1：程序员能够修改调用函数中的数据对象
+* 原因2：通过传递引用而不是整个数据对象，可以提高程序的运行速度
+
+对于何时使用按值传递，何时使用指针，何时使用引用传递，有如下原则和要求：
+
+* 如果数据对象很小，如内置数据类型或小型结构，则按值传递
+* 如果数据对象是数组，则使用指针，因为这是唯一的选择，并将指针声明为转向const的指针
+* 如果数据对象是较大的结构，则使用const指针或者const引用，可以调高程序效率，节约内存空间
+* 如果数据对象是类对象，则使用const引用。
+
+对于修改调用函数中数据的函数：
+
+* 如果数据对象是内置数据类型，则使用指针。
+* 如果数据对象是数组，则之只能使用指针。
+* 如果数据对象是结构，则使用指针或者引用。
+* 如果数据对象是类对象，则使用引用。
 
 ### 8.3 默认参数
 
+默认参数指当函数调用中省略了实参时，自动使用的一个值。
+
+通过函数原型，编译器可以了解函数所需的参数数目，因此函数原型也必须将可能的默认参数告知程序，方法是将值赋给原型中的参数。
+
+```C++
+char * left (const char * str, int n = 1);
+```
+
+对于带参数列表的函数，必须从右向左添加默认值。也就是说，要为某个参数设置默认值，则必须为它右边的所有参数提供默认值。
+
+```C++
+int harpo(int n, int m = 4, int j = 5);//正确
+int chico(int n, int m = 6, int j);//错误
+int groucho(int k = 1, int m = 2, int n = 3);//正确
+```
+
+实参按从左到右的顺序依次被赋给相应的形参，而不能跳过任何参数。
+
+```C++
+beeps = harpo(3, , 8);//错误
+```
+
+ 下面程序使用了漠然参数。请注意，只有原型指定了默认值。函数定义与没有参数时完全相同。
+
+```C++
+#include <iostream>
+
+const int ArSize = 80;
+char* left(const char* str, int n = 1);
+
+int main()
+{
+    using namespace std;
+    char sample[ArSize];
+    cout << "Enter a string:\n";
+    cin.get(sample, ArSize);
+    char* ps = left(sample, 4);
+    cout << ps << endl;
+    delete[] ps;// free old string
+    ps = left(sample);
+    cout << ps << endl;
+    delete[] ps;
+    return 0;
+}
+
+char* left(const char* str, int n)
+{
+    if (n < 0)
+        n = 0;
+    char* p = new char[n + 1];
+    int i;
+    for (i = 0; i < n && str[i]; i++)
+        p[i] = str[i];
+    while (i <= n)
+        p[i++] = '\0';
+    return p;
+}
+```
+
+该程序使用new创建了一个新的字符串，一存储被选择的字符。
+
+当用户错误的输入导致字符数目为负数时，使用一个条件判断语句，将n设置为0。
+
+```c++
+    if (n < 0)
+        n = 0;
+```
+
+当输入的字符数目多余字符串包含的字符数时，使用一个组合的表达式解决。表达式的第二部分`str[i]`，是要赋值的字符的编码。遇到空值字符（其编码为0）后，循环将结束。这样while循环将使字符串以空值字符结束，并将余下的空间设置为空值字符。
+
+```C++
+i < n && str[i]
+```
+
 ### 8.4 函数重载
+
+#### 8.4.1 函数重载基本方法
+
+函数多态时C++在C语言的基础上新增的功能。默认参数让您能够使用不同数目的参数调用一个函数，而函数多态（函数重载）让您能够使用多个同名的函数。
+
+函数重载的关键是函数的参数列表——也被称为函数特征标。如果两个函数的参数数目和类型相同，同时参数的排列顺序也相同，则它们的特征标相同，而变量名是无关紧要的。C++允许定义名称相同的函数，条件是它们的特征表不同。如果参数数目和/或参数类型不同，则特征标也不同。如下，定义一组原型。
+
+```C++
+void print(const cahr * str, int width); // #1
+void print(double d, int width); // #2
+void print(long l, int width); // #3
+void print(int i, int width)l // #4
+void print(const char * str); // #5
+```
+
+使用print()函数时，编译器将根据所采取的用法使用有相应参数列表的函数的原型。
+
+```C++
+print("Pancakes", 15);// 使用#1
+print("Syrup");// 使用#2
+print(1999.0, 10);// 使用#3
+print(1999, 12);// 使用#4
+print(1999L, 15);// 使用#5
+```
+
+但调用函数时，其参数列表无法和任何一个原型匹配时，其将尝试使用标准类型转换强制进行匹配。如果找到多个经过强制转换后可以使用的函数原型，C++也将拒绝这种函数调用，并将其视为错误。
+
+一些看起来不同的特征，但是C++可以使用同一个实参对其进行调用的函数原型也是不可行的，如下：
+
+```C++
+double cube(doube x);
+double cube(double & x);
+```
+
+虽然，参数列表看起来有所不同，但是在调用时，参数可能和这两个原型同时匹配，因此编译器无法确定究竟使用哪一个函数原型。故编译器将某种类型的引用和该类型是为用一个特征标。
+
+函数重载，区分const变量和非const变量。之所以在这两个参数上有所区别，是因为将非const值赋给const变量是合法的，但反之则是非法的。
+
+函数的返回值不能作为函数重载的特征标。  
+
+重载引用参数
+
+* 左值引用参数r1和可修改的左值参数匹配。
+* const左值引用参数r2和可修改的左值参数、const左值参数和右值参数匹配。
+* 右值引用参数r3和右值匹配。
+
+#### 8.4.2 重载示例
+
+下面程序返回整数的前n位。
+
+```c++
+#include <iostream>
+unsigned long left(unsigned long num, unsigned ct);
+char* left(const char* str, int n = 1);
+
+int main()
+{
+    using namespace std;
+    //char* trip = "Hawwii!!";
+    unsigned long n = 12345678;
+    int i;
+    char* temp;
+
+    for (i = 1; i < 10; i++)
+    {
+        cout << left(n, i) << endl;
+        temp = left("Hawwii!!", i);
+        cout << temp << endl;
+        delete[] temp;
+    }
+    return 0;
+}
+
+unsigned long left(unsigned long num, unsigned ct)
+{
+    unsigned digits = 1;
+    unsigned long n = num;
+
+    if (ct == 0 || num == 0)
+        return 0;
+    while (n /= 10)
+        digits++;// 计算数字有多少位
+    if (digits > ct)// 当总位数大于需要取的位数时
+    {
+        ct = digits - ct;
+        while (ct--)
+            num /= 10;
+        return num; // 返回剩下的数字
+    }
+    else
+        return num;
+}
+
+char* left(const char* str, int n)
+{
+    if (n < 0)
+        n = 0;
+    char* p = new char[n + 1];
+    int i;
+    for (i = 0; i < n && str[i]; i++)
+        p[i] = str[i];
+    while (i <= n)
+        p[i++] = '\0';
+    return p;
+}
+```
+
+
+
+#### 8.4.3 何时使用函数重载
+
+函数重载切忌乱用，只有当函数基本上执行相同任务，但使用不同形式的数据时，才应采用函数重载。
 
 ### 8.5 函数模板
