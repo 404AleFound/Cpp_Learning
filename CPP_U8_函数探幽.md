@@ -962,3 +962,603 @@ char* left(const char* str, int n)
 函数重载切忌乱用，只有当函数基本上执行相同任务，但使用不同形式的数据时，才应采用函数重载。
 
 ### 8.5 函数模板
+
+现在的C++编译器实现了C++新增的一项特性，函数模板。函数模板是通用的函数描述，即通过泛型来定义函数，其中的泛型可用具体的类型替换。通过将类型作为参数传递给模板，可使编译器生成该类型的函数。由于模板允许以泛型的方式编写程序，因此有时也被称为通用编程。
+
+当定义了一个交换两个int值的函数时，假设要交换两个double值，则可以复制交换int值的函数，将其中形参的类型从double换为int。如果要交换char值，则同样需要修改函数的形参类型，这种修改即麻烦，而且容易出错。C++的函数模板功能能自动完成这一过程，且节省时间，更加可靠。
+
+函数模板允许以任意类型的方式来定义函数。例如，可以这样建立一个交换模板。
+
+```C++
+template <typename Anytype>
+// 指出建立一个模板，并将类型命名为Anytype。
+// 关键字template和typename是必须的，除非使用class代替typename
+// 另外，必须使用尖括号。
+// 类型名字可以任意选择，只要遵循C++命名规则即可 
+void swap(Anytype & a, Anytype & b)
+{
+    Anytype temp = a;
+    a = b;
+    b = temp;
+}
+```
+
+在标准C++98添加关键字typename之前，C++使用关键字class创建模板。也就是说上述代码也可以写为如下形式。
+
+```C++
+template <class Anytype>
+// 使用关键字class代替typename
+void swap(Anytype & a, Anytype & b)
+{
+    Anytype temp = a;
+    a = b;
+    b = temp;
+}
+```
+
+```c++
+#include<iostream>
+
+template <typename T>
+void Swap(T& a, T& b);
+
+int main()
+{
+    using namespace std;
+    int i = 10;
+    int j = 20;
+    cout << "i, j = " << i << ", " << j << ".\n";
+    cout << "Using compluer-generated int swapper:\n";
+    Swap(i, j);
+    cout << "Now i, j = " << i << ", " << j << ".\n";
+
+    int x = 10;
+    int y = 20;
+    cout << "x, y = " << x << ", " << y << ".\n";
+    cout << "Using compluer-generated double swapper:\n";
+    Swap(x, y);
+    cout << "Now x, y = " << x << ", " << y << ".\n";
+
+    return 0;
+}
+
+template <typename T>
+void Swap(T& a, T& b)
+{
+    T temp = a;
+    a = b;
+    b = temp;
+}
+```
+
+输出如下：
+
+```
+i, j = 10, 20.
+Using compluer-generated int swapper:
+Now i, j = 20, 10.
+x, y = 10, 20.
+Using compluer-generated double swapper:
+Now x, y = 20, 10.
+```
+
+注意，当Swap接受到两个int参数时，编译器将生成该函数的int版本，即将所有的T替换为int。当接收到两个double参数时，则亦然。
+
+注意，函数模板不能缩短可执行程序。对于上述程序，最终仍将由两个独立的函数定义，就像之前函数重载那样手工定义一样。最终的代买不包含任何模板，而只包含了为程序生成的实际函数。使用模板的好处是，它使生成多个函数定义更简单、更可靠。
+
+#### 8.5.1 重载的模板
+
+需要对多个不同类型使用同一种算法的函数时，可以使用模板。然而并非所有的类型都是用相同的算法。为满足这种需求可以像常规函数定义那样重载函数模板定义。和常规重载一样，被重载的模板的函数形参列表必须不同。在模板参数中，并非所有的参数都必须是模板参数类型。
+
+```C++
+#include <iostream>
+
+template <typename T>
+void Swap(T& a, T& b);
+
+template <typename T>
+void Swap(T* a, T* b, int n);
+
+void Show(int a[]);
+
+const int Lim = 8;
+
+int main()
+{
+    using namespace std;
+    int i = 10, j = 20;
+    cout << "i, j = " << i << ", " << j << ".\n";
+    cout << "Using compiler-generated int swapper:\n";
+    Swap(i, j);
+    cout << "Now i, j = " << i << ", " << j << ".\n";
+
+    int d1[Lim] = { 0, 7, 0, 4, 1, 7, 7, 6 };
+    int d2[Lim] = { 0, 7, 2, 0, 1, 9, 6, 9 };
+    cout << "Original array:\n";
+    Show(d1);
+    Show(d2);
+    Swap(d1, d2, Lim);
+    cout << "Swapped arrays:\n";
+    Show(d1);
+    Show(d2);
+    return 0;
+}
+
+template <typename T>
+void Swap(T& a, T& b)
+{
+    T temp = a;
+    a = b;
+    b = temp;
+}
+
+template <typename T>
+void Swap(T * a, T * b, int n)
+{
+    for (int i = 0; i < n; i++)
+        Swap(a[i], b[i]);
+}
+
+void Show(int a[])
+{
+    using namespace std;
+    cout << a[0] << a[1] << '/';
+    cout << a[2] << a[3] << '/';
+    for (int i = 4; i < Lim; i++)
+        cout << a[i];
+    cout << endl;
+}
+```
+
+输出如下：
+
+```
+i, j = 10, 20.
+Using compiler-generated int swapper:
+Now i, j = 20, 10.
+Original array:
+07/04/1776
+07/20/1969
+Swapped arrays:
+07/20/1969
+07/04/1776
+```
+
+注意，如下形式的声明和定义中。虽然在 C++ 中，数组参数会被隐式转换为指针（即 `T a[]` 等同于 `T* a`），但编译器在链接阶段仍然会严格检查函数签名是否完全匹配，推荐统一使用 `T *`。
+```C++
+template <typename T>
+void Swap(T* a, T* b, int n);
+
+template <typename T>
+void Swap(T a[], T b[], int n)
+{
+    for (int i = 0; i < n; i++)
+        Swap(a[i], b[i]);
+}
+```
+
+其次，对于数组中每个元素的互换，不需要再次重复编写代码，只要调用已经定义好的函数即可，这说明使用函数模板的函数是可以相互嵌套使用的。
+
+```c++
+template <typename T>
+void Swap(T * a, T * b, int n)
+{
+    for (int i = 0; i < n; i++)
+        Swap(a[i], b[i]);
+}
+```
+
+#### 8.5.2 模板的局限性
+
+假设有如下代码模板
+
+```
+template <typename T>
+void f(T a, T b)
+{ ... }
+```
+
+假如代码块部分定义了赋值，`a =  b`。但是T为数组，这种运算将不成立。
+
+加入代码块部分定义了比较，`a > b`。但是T为结构，该部分代码定义不成立。
+
+总之，编写的模板函数可能琺处理某些类型的数据。另外有时候通用化是有意义的，但是C++语法不允许这样做。例如，将两个包含位置坐标的结构相加是有意义的，虽然没有为结构定义运算符+。一种解决方法是，C++允许使用重载运算符+，一边能够将其用于特定的结构或类；另一种解决方案是，为特定类型提供具体化的模板定义，以下介绍这种具体化的模板定义。
+
+#### 8.5.3 显示具体化
+
+假设定义了如下结构：
+
+```C++
+struct job
+{
+    char name[40];
+    double salary;
+    int floor;
+};
+// 交换的一般通用代码
+T temp;
+temp = a;
+a = b;
+b = temp;
+```
+
+由于C++允许将一个结构直接赋给另外一个结构，因此即使T是一个job结构，上述代码也适用。然而，假设只想交换salary和floor成员，而不交换name成员，则需要使用不同的代码，但是对于函数形参列表来说，无论交换哪些变量，使用的都是如`Swap(T & a, T & b)`的形参列表，无法产生有区分度的特征度，也就无法通过函数重载实现这个功能。
+
+然而，可以通过一个具体化的函数定义——称为显示具体化，其中包含所需的代码。当编译器找到与函数调用匹配的具体化定义时，将使用该定义，而不再寻找模板以产生新的函数定义。
+
+第三代具体化(ISO/ANSI C++标准)
+
+C++98标准选择了下面的方法。
+
+* 对于给定的函数名，可以有非模板函数、模板函数、显式具体化模板函数以及它们的重载版本。
+* 显式具体化的原型和定义应以template<>打头，并通过名称来指出类型
+* 具体化优先于常规模板，而非模板函数优先于具体化和常规模板。
+
+```c++
+// 非模板函数
+void Swap(job &, job &)
+    
+// 模板函数
+template <typename T>;
+void Swap(T &, T &);
+
+// 显示具体化原型
+template <> void Swap<job>(job &, job &);
+```
+
+```C++
+#include <iostream>
+
+struct job
+{
+    char name[40];
+    double salary;
+    int floor;
+};
+
+template <typename T>
+void Swap(T& a, T& b);
+
+template <> void Swap<job>(job&, job&);
+
+void Show(job&);
+
+int main()
+{
+    using namespace std;
+    cout.precision(2);
+    cout.setf(ios::fixed, ios::floatfield);
+    int i = 10, j = 20;
+    cout << "i, j = " << i << ", " << j << ".\n";
+    cout << "Using compiler-generated int swapper:\n";
+    Swap(i, j);
+    cout << "Now i, j = " << i << ", " << j << ".\n";
+
+    job sue = { "Susan Yaffee", 73000.60, 7 };
+    job sidney = { "Sidney Taffee", 78606.73, 9 };
+    cout << "Before job swapping:\n";
+    Show(sue);
+    Show(sidney);
+    Swap(sue, sidney);
+    cout << "After jon swapping:\n";
+    Show(sue);
+    Show(sidney);
+
+    return 0;
+}
+
+template <typename T>
+void Swap(T& a, T& b)
+{
+    T temp = a;
+    a = b;
+    b = temp;
+}
+
+template <> void Swap<job>(job& j1, job& j2)
+{
+    //double t1;
+    //int t2;
+    //t1 = j1.salary;
+    //j1.salary = j2.salary;
+    //j2.salary = t1;
+    //t2 = j1.floor;
+    //j1.floor = j2.floor;
+    //j2.floor = t2;
+    Swap(j1.salary, j2.salary);
+    Swap(j1.floor, j2.floor);
+}
+
+void Show(job& j)
+{
+    using namespace std;
+    cout << j.name << ": $" << j.salary
+        << " on floor " << j.floor << endl;
+}
+```
+
+输出如下：
+
+```
+i, j = 10, 20.
+Using compiler-generated int swapper:
+Now i, j = 20, 10.
+Before job swapping:
+Susan Yaffee: $73000.60 on floor 7
+Sidney Taffee: $78606.73 on floor 9
+After jon swapping:
+Susan Yaffee: $78606.73 on floor 9
+Sidney Taffee: $73000.60 on floor 7
+```
+
+#### 8.5.4 实例化和具体化
+
+为进一步了解模板，必须理解术语实例化和具体化。在代码中包含函数模板本身并不会生成函数定义，它只是一个用于生成函数定义的方案。编译器使用模板为特定类型生成函数定义时，得到的是模板实例。模板并非函数定义，但使用int的模板实例是函数定义。
+
+最初编译器只能通过隐式实例化，来使用模板生成函数定义，但现在C++还允许**显示实例化**。这意味着可以直接命令编译器创建特定的实例，其语法是声明所需的种类——用<>符号指示类型，并在声明前加上关键字template。
+
+```C++
+template void Swap<int>(int, int);
+// 表示编译器在看到上述声明后，将使用Swap()模板生成一个使用int类型的实例。也就是说，该声明的意思是“使用Swap()模板生成一个使用int类型的函数定义”
+```
+
+与显示实例化不同，**显示具体化**使用下面两个等价声明之一。
+
+```c++
+template <> void Swap<int>(int &, int &);
+template <> void Swap(int &, int &);
+// 这些声明的意思是不要使用Swap()模板来生成函数定义，而应当使用专门为int类型显示地定义的函数定义
+// 这些原型必须要有自己的函数定义。显示具体化声明在关键字template后面包含<>，而显示实例化则没有。
+```
+
+显示实例化仍然使用隐式实例化的函数定义，但是明确规定了参数的类型。显示具体化不使用隐式实例化的函数定义，而是重新编写了函数定义，且指出了参数的类型。
+
+```C++
+...;
+template <typename T>
+void Swap(T &, T &);
+// 隐式函数模板
+
+template <> void Swap<job>(job &, job &);
+//显示具体化
+
+int main()
+{
+    template void Swap<job>(job &, job &);
+    ...;
+    
+    short a, b;
+    ...;
+    Swap(a, b);// 使用函数模板生成隐式函数实例
+    
+ 	job n, m;
+    ...;
+    Swap(n, m);// 使用定义好的显示具体化模板生成函数定义
+    
+	char g, h;
+    ...;
+    Swap(g, h);// 使用显示函数实例
+}
+```
+
+#### 8.5.5 编译器选择使用哪个函数版本
+
+对于函数重载、函数模板和函数模板重载，C++需要有一个定义良好的策略，来决定为函数调用使用哪一个函数定义 ，尤其是有多个参数时。这个过程称之为重载解析。
+
+* 第一步：创建候选函数列表。其中包含与被调用函数的**名称**相同的函数和模板函数
+* 第二步：使用候选函数列表创建可行函数列表。这些都是**参数数目正确的函数**，为此有一个**隐式转换序列**，其中包括实参类型与相应的形参类型完全匹配的情况。
+
+* 第三步：确定是否**有最佳的可行函数**，如果有，则使用它，否则该函数调用报错。注重查看函数调用参数与可行的候选函数参数匹配所需要的转换。通常，从最佳到最差的顺序如下所述：
+  * 完全匹配，但常规函数优于模板
+  * 提升转换（例如，char和short自动转换为int，float自动转换为double）
+  * 标准转换（例如，int转换为char，long转换为double）
+  * 用户定义的转换，如类声明中定义的转换
+
+例子：
+
+```C++
+may('B');//函数调用
+```
+
+查找到如下函数：
+
+```C++
+void may(int);							// #1
+float may(float, float = 3);			// #2 
+void may(char);							// #3 完全匹配
+char * may(const char *);				// #4 No
+cahr may(const char &);					// #5 完全匹配
+template <class T> void may (const T &);// #6 完全匹配
+template <class T> void may (T* );		// #7 No
+```
+
+其中，#4和#7由于整数类型不能被隐式的转换为指针类型，舍弃。#3、#5和#6完全匹配，其中#3和#5优于#6。#1是提升转换，#2是标准转换，#1优于#2。其中#3和#5都是完全匹配，但其也分为完全匹配和最佳匹配。
+
+进行完全匹配时，C++允许某些无关紧要的转换，如下。这些参数类型虽然有所区别，但是无关紧要，也属于完全匹配。
+
+| 从实参               | 到形参                   |
+| -------------------- | ------------------------ |
+| Type                 | Type &                   |
+| Type &               | Type                     |
+| Type []              | * Type                   |
+| Type (argument-list) | Type (*) (argument-list) |
+| Type                 | const Type               |
+| Type                 | volatile Type            |
+| Type *               | const Type               |
+| Type *               | volatile Type *          |
+
+如果有多个匹配的类型，则编译器将无法完成重载解析过程；如果没有最佳的可行函数，则编译器将生成一条错误消息，该消息可能会使用诸如“ambiguous（二义性）”这样的词语。
+
+有时，即使两个函数都完全匹配，也可以完成函数重载。首先指向非const数据的指针和引用有限与非const指针和引用参数匹配。然而，const和非const之间的区别只适用于指针和引用指向的数据。
+
+一个完全匹配优于另一个的另一种情况是，其中一个是非模板函数，而另一个不是。非模板函数优先于模板函数。
+
+如果两个完全匹配的函数都是模板函数，则较具体的函数模板优先。例如，显示具体化将优先于模板隐式生成的具体化。数据具体化并不一定意味着显示具体化，而是指编译器推断哪种类型时执行的转换最少，如下：
+
+```C++
+template <class Type> void recycle(Type t); // #1
+template <class Type> void recycle(Type * t); // #2
+
+// 假设如下使用：
+blot ink = {25, "sports"};
+recycle(&ink)
+```
+
+**`recycle(&ink)`在与#1进行匹配时，将Type解释为blot *；在与#2进行匹配时，将Type解释为blot。后者被认为是更加具体的。**
+
+示例，使用部分排序规则来确定使用哪个模板进行定义。
+
+```C++
+#include <iostream>
+
+template <typename T> void ShowArray(T arr[], int n);
+
+template <typename T> void ShowArray(T* arr[], int n);
+
+struct debts
+{
+    char name[50];
+    double amount;
+};
+
+int main()
+{
+    using namespace std;
+    int things[6] = { 13, 31, 103, 301, 310, 130 };
+    struct debts mr_E[3] =
+    {
+        {"Ima Wolfe", 2400.0},
+        {"Ura Foxe", 1300.0},
+        {"Iby Stout", 1800.0}
+    };
+        // 定义数组存储指针
+    double* pd[3];
+
+    for (int i = 0; i < 3; i++)
+        pd[i] = &mr_E[i].amount;// 将每一个指针数组中的指针指向结构体的amount
+
+    cout << "Listing Mr.E's counts of things:\n";
+    ShowArray(things, 6);
+
+    cout << "Listing MR.E's debts:\n";
+    ShowArray(pd, 3);
+    return 0;
+}
+
+template <typename T> void ShowArray(T arr[], int n)
+{
+    using namespace std;
+    cout << "template A\n";
+    for (int i = 0; i < n; i++)
+        cout << arr[i] << ' ';
+    cout << endl;
+}
+
+template <typename T> void ShowArray(T* arr[], int n)
+{
+    using namespace std;
+    cout << "template B\n";
+    for (int i = 0; i < n; i++)
+        cout << *arr[i] << ' ';
+    cout << endl;
+}
+
+```
+
+输出如下：
+
+```
+Listing Mr.E's counts of things:
+template A
+13 31 103 301 310 130
+Listing MR.E's debts:
+template B
+2400 1300 1800
+```
+
+在某些情况下，可通过编写合适的函数调用，引导编译器做出希望的选择。
+
+```C++
+#include <iostream>
+
+template <typename T> T lesser(T a, T 
+                              )
+{
+    return a < b ? a : b;
+}
+
+int lesser(int a, int b)
+{
+    a = a < 0 ? -a : a;
+    b = b < 0 ? -b : b;
+    return a < b ? a : b;
+}
+
+int main()
+{
+    using namespace std;
+    int m = 20;
+    int n = -30;
+    double x = 15.5;
+    double y = 25.9;
+    
+    cout << lesser(m, n) << endl;
+    cout << lesser(x, y) << endl;
+    cout << lesser<>(m, n) << endl; // <>指出使用函数模板获取函数定义
+    cout << lesser<int>(x,y) << endl;// 显示实例化
+    return 0;
+}
+```
+
+输出如下：
+
+```
+20
+15.5
+-30
+15
+```
+
+#### 8.5.6 模板函数的发展
+
+在C++98中，编写模板函数时，并非总能知道应在声明中使用哪种类型。
+
+```C++
+template<class T1, class T2> void ft(T1 x, T2 y)
+{
+    ...;
+    xpy = x + y;
+}
+```
+
+由于T1可能是double，而T2可能是int，这种情况下，两个变量相加为double。当T1可能是short，T2可能是int，这种情况下和可能为int。故，如无法声明`xpy`类型，可能会带来编程混乱。
+
+C++11引入关键字`decltype`解决这个问题。
+
+```C++
+decltype(expression) var;
+```
+
+* 第一步，如果expression是一个没有用括号括起来的标识符，则var 的类型和expression一样，包括const等限定符。
+* 第二步，如果expression是一个函数调用，则var的类型和该函数的返回值一样。
+* 第三步，如果expression是一个左值，则var为指向其的引用。
+* 第四步，如果上面条件均不满足，则var的类型和expression的类型一样。
+
+注意上述每一步一次执行。
+
+对于函数模板返回值的类型，无法指定，为此引入auto关键字。
+
+```C++
+auto h(int x, int y) -> double;
+```
+
+因为C++的编译是从左向右的，参数未被声明，因此不知道参数的类型，又如何通过参数类型来锁定返回值类型，auto关键字通过后置返回值类型定义段，使得程序可以先确定参数的类型，再确定返回值的类型。
+
+```C++
+template <typename T1, typename T2> auto gt(T1 a, T2 b) -> decltype(a + b)
+{
+    return a + b;
+}
+```
+
+现在，`decltype`在参数声明后面，因此a和b位于作用域内，可以使用它们。
