@@ -428,14 +428,399 @@ static int errors = 5;
 
 可使用接性为外部的静态变量在多文件程序的不同部分之间共享数据；可使用链接性为内部的静态变量在同一个文件中的多个函数之间共享数据。
 
+```c++
+#include <iostream>
+int tom = 3;
+int dick = 30;
+static int harry = 300;
 
+void remote_access();
+
+int main()
+{
+	using namespace std;
+    cout << "main() reports the following addresses:\n";
+    cout << &tom << " = &tom, " << &dick << " = &dick, ";
+    cout << &harry << " = &harry\n";
+    remote_access();
+    return 0;
+}
+```
+
+```c++
+#include <iostream>
+extern int tom;
+static int dick = 10;
+int harry = 200;
+
+void remote_access()
+{
+    using namespace std;
+    cout << "remote_access() reports the following addresses:\n";
+    cout << &tom << " = &tom, " << &dick << " = &dick, ";
+    cout << &harry << " = &harry\n";
+}
+```
+
+输出如下：
+
+```
+main() reports the following addresses:
+00007FF6F6F5E00C = &tom, 00007FF6F6F5E010 = &dick, 00007FF6F6F5E014 = &harry
+remote_access() reports the following addresses:
+00007FF6F6F5E00C = &tom, 00007FF6F6F5E004 = &dick, 00007FF6F6F5E000 = &harry
+```
 
 **静态持续性、无链接性**
 
-### 9.2.4 函数和链接性
+将static限定符用于在代码块中定义的变量。这意味这该变量虽然只在该代码块中可用，但它在该代码块中不处于活动状态时仍然存在。另外如果初始化了静态局部变量，则程序只在启动时进行一次初始化，以后再调用函数时，不会像自动变量那样再次被初始化。
 
-### 9.2.5 语言链接性
+```C++
+#include <iostream>
+const int ArSize = 10;
 
-### 9.2.6 存储方案和动态分配  
+void strcount(const char* str);
+
+int main()
+{
+    using namespace std;
+    char input[ArSize];
+    char next;
+
+    cout << "Enter a line:\n";
+    cin.get(input, ArSize);
+    while (cin)
+    {
+        cin.get(next);
+        while (next != '\n')
+            cin.get(next);
+        strcount(input);
+        cout << "Enter next line (empty line to quit):\n";
+        cin.get(input, ArSize);
+    }
+    cout << "Bye\n";
+    return 0;
+}
+
+void strcount(const char* str)
+{
+    using namespace std;
+    static int total = 0;
+    int count = 0;
+
+    cout << "\"" << str << "\" contains ";
+    while (*str++)//equal to while (*(str++))
+        count++;
+    total += count;
+    cout << count << " characters\n";
+    cout << total << " characters total\n";
+}
+```
+
+输出如下：
+
+```
+Enter a line:
+ffffffffffffffffffff
+"fffffffff" contains 9 characters
+9 characters total
+Enter next line (empty line to quit):
+aaaaaaaaaaaaaaaaaaaaaaaa
+"aaaaaaaaa" contains 9 characters
+18 characters total
+Enter next line (empty line to quit):
+ffffffffffffffff
+"fffffffff" contains 9 characters
+27 characters total
+Enter next line (empty line to quit):
+aaaaaaaaaaaaaaaaaaaaaaaa
+"aaaaaaaaa" contains 9 characters
+36 characters total
+Enter next line (empty line to quit):
+
+Bye
+```
+
+ 方法`cin.get(input, ArSize)`将一直读取输入，直到到达行尾或者读取了`ArSize-1`个字符为止。它把换行符留在输入队列中。该程序使用`cin.get(next)`读取行输入后的字符。如果`next`是换行符，则说明`cin.get(input, ArSize)`读取了整行；否则说明行中还有字符没有被读取。随后，程序使用一个循环来丢弃余下的字符，不过可以修改代码，使得下一轮输入读取行中余下的字符。程序在试图使用`get(char*, int)`读取空行时，将导致`cin`为false。
+
+静态变量total只在程序运行时被设置为0，以后在两次函数调用之间，其值将保持不变，因此能够记录读取的字符总数。
+
+### 9.2.4 说明符和限定符
+
+存储说明符（storage class specifier）和cv-限定符（cv-qualifier）的C++关键字提供了其他有关存储的信息。
+
+下面是存储说明符：
+
+* auto（在C++11中不是说明符，用于自动类型判断）
+* register（寄存器变量）
+* static（静态变量）
+* thread_local（变量的持续性和线程的持续性相同）
+* mutable（即使结构（或类）变量为const，其某个成员变量也可以更改）
+
+```c++
+struct data
+{
+    char name[30];
+    mutable int accesses;
+    ...
+};
+const data veep = {"Claybourne Clodde", 0, ...};
+strcpy(veep,name, "Joye Joux");// 不允许
+veep.accesses++;// 允许
+```
+
+下面是cv-限定符：
+
+* const
+* volatile（即使程序代码没有对内存单元进行修改，其值也可能发生变化）
+
+在C++中const关键字对变量的存储类型稍有影响。在默认情况下全局变量的链接性为外部的，但const全局变量的链接性为内部的。也就是说，在C++看来，全局const定义就像使用了static说明符一样。
+
+故在头文件中，可以使用const关键字将一组常量包含在其中。那么每个文件引用该头文件时都会拥有自己的一套变量，而不会发生冲突。
+
+如果在某一文件中想使得const变量为外部链接性，则可以使用关键字extern来覆盖默认的内部链接性，操作如下：
+
+```C++
+extern const int states = 50;
+```
+
+在这种情况下，必须在所有使用该常量的文件中使用extern关键字来说明它。这与常规外部变量不同，定义常规外部变量时，不必使用关键字extern进行初始化，但是在使用该变量的其他文件中，必须使用extern来声明。
+
+在函数或代码块中声明const时，其作用域为代码块，即仅当程序执行该代码块中的代码时，该常量才是可用的。这意味这在函数或代码中中创建常量时，不必担心其名称与其他地方定义的常量发生冲突。
+
+### 9.2.5 函数和链接性
+
+和变量一样，函数也有链接性。C++不允许在一个函数中定义另一个函数，所有函数的存储持续性都为静态，即在整个程序执行期间一直存在。在默认情况下，函数的链接性为外部的，即可以在文件间共享。实际上可以在函数原型中使用关键字extern来指出函数是在另一个文件中定义的，不过这是可选的。
+
+使用关键字static将函数的链接性设置为内部的，使之只能在一个文件中使用。必须同时在原型和函数定义中使用该关键字。
+
+```c++
+static int private(double x)
+...
+static int private(double x)
+{
+	...
+}
+```
+
+这意味着该函数仅仅在这个文件中可见，和之前静态变量类似，可以在其他文件中命名同名的函数。同时，在定义静态函数的文件中，静态函数将覆盖外部定义，因此即使在外部定义了同名函数，该文件仍将使用静态函数。
+
+单定义规则适用于非内联函数（常规函数）。因此对于链接性为外部的函数来说，只能有一个文件包含该函数的定义，但是用该函数的每个文件都应包含该函数原型。
+
+单定义规则不适用于内联函数（关键字 inline）。这允许程序员能够将内联函数的定义放在头文件中。这样包含了头文件中的每个文件都有内联函数的定义。然而，C++要求同一个函数的所有内联定义都必须相同。
+
+**C++寻找函数**
+
+如果文件中的函数原型指出函数是静态的，则编译器将只在该文件中查找函数定义；否则，编译器将在所有程序文件中查找。如果找到两个定义，编译器将发出错误消息，因为每个外部函数只能有一个定义。如果程序文件中没有找到，编译器将在库中搜索。这意味着如果定义了一个与库函数同名的函数，编译器将使用程序员定义的版本，而不是库函数。
+
+### 9.2.6 语言链接性
+
+链接程序要求每个不同的函数都有不同的符号名。C++中一个函数名可能对应多个函数，必须将这些函数翻译为不同的符号名称。因此C++编译器执行名称矫正或名称修饰，为重载函数生成不同的符号名称。例如可能将`spiff(int)`转换为`_spiff_i()`，而将`spiff(double, double)`转换为`_spiff_d_d()`。这种方法被称为C++语言链接。略略略，看不懂了。
+
+### 9.2.7 存储方案和动态分配  
+
+前面介绍C++用来为变量分配内存的几种方案，它们不适用于使用C++new运算符的分配内存的情况，这种内存称之为动态内存。动态内存通过运算符new和delete控制，而不是由作用域和链接性规则控制。因此可以在一个函数中分匹配动态内存，而在另外一个函数中将其释放。与自动变量不同，动态变量对应的动态内存不是后进先出的LIFO结构，其分配和释放顺序要取决与new和delete在何时以何种方式被使用。通常，编译器使用三块独立的内存：一块用于静态变量，一块用于自动变量，一块用于动态变量。
+
+假设有下面语句：
+
+```c++
+float* p_fees = new float [20];
+```
+
+由new分配80个字节（假设float为4个字节）的内存将一直保存在内存中，直到使用delete运算符将其释放。但当包含该声明的语句块执行完毕时，p_fees指针将消失。如果希望另一个函数能够使用这个函数中80个字节的内容，则必须将其地址传递给或返回给该函数。另一方面，如果将p_fees的链接性声明为外部的，则文件中位于该声明后面的所有函数都可以使用它。另外，通过在另一个文件中使用下述声明，便可在其中使用该指针。
+
+```C++
+extern float * p_fees;
+```
+
+**使用new运算符初始化**
+
+```c++
+int* pi = new int (6);
+double* pd = new double (99.99)
+```
+
+如上，在类型名后面加上初始值，并用括号将其括起，可以起到初始化之指针指向值的作用。
+
+要初始化常规结构或数组，需要使用大括号的列表初始化，这要求编译器支持C++11，如下：
+
+```C++
+struct where {double; double y; double z;};
+where * one = new where {2.5, 5.3, 7.2};
+int * arr = new int [4] {2, 3, 4, 5};
+```
+
+在C++11中，还可以将列表初始化用于单值变量：
+
+```C++
+int * pi = new int {6};
+double * pd = new double {99.99};
+```
+
+**new失败时**
+
+new可能找不到请求的内存量。以前C++会返回一个空指针，现在将引发异常`std::bad_alloc`。
+
+**new：运算符、函数和替换函数**
+
+运算符new和new[]分别调用下面函数：
+
+```C++
+void * operator new (std::size_t);
+void * operator new [](std::size_t);
+```
+
+这些函数被称为分配函数，它们位于全局名称空间中。同样也有由delete和delelte[]调用的释放函数。
+
+```C++
+void operator delete(void *);
+void operator delete[](void*);
+```
+
+他们使用运算符重载语法。
+
+```c++
+int * pi = new int;
+// 将被转换为int * pi = new(sizeof(int));
+int * pa =  new int[40];
+// 将被转换为int * pa = new(40*sizeof(int));
+delete pi;
+// 将被转换为delete (pi);
+```
+
+C++将这些函数称为可替换的。故C++允许程序员对new和delete进行重载。
+
+**定位new运算符**
+
+通常，new负责在堆中找到一个足以能够满足要求的内存块。new运算符还有另外一种变体，被称为定位（placement）new运算符，它让您能够指定要使用的位置。程序员可以通过这种特性来设置其内存管理规程、处理需要通过特定地址进行访问的硬件或在特定位置创建对象。
+
+要使用定位new特性，首先需要包含头文件new，它提供了这种版本的new运算符原型；然后将new运算符用于提供了所需地址的参数。除需要指定参数外，句法与常规的new运算符完全相同。如下。
+
+```c++
+#include <new>
+struct chaff
+{
+    char dross[20];
+    int slag;
+};
+
+char buffer1[50];
+char buffer2[500];
+int main()
+{
+    chaff* p1, *p2;
+    int *p3, *p4;
+    p1 = new chaff;
+    p3 = new int[20];
+    
+    p2 = new (buffer1) chaff;
+    p4 = new (buffer2) int [20];
+}
+...
+```
+
+下面程序说明常规new运算符和定位new运算符之间的一些重要差别。
+
+```c++
+#include <iostream>
+#include <new>
+
+const int BUF = 512;
+const int N = 5;
+
+char buffer[BUF];
+
+int main()
+{
+    using namespace std;
+    double* pd1, * pd2;
+    int i;
+    cout << "Calling new and placement new:\n";
+    pd1 = new double[N];
+    // 常规new将数组pd1放在很远的地方，其地址为00000198C5D42DD0，位于动态管理的堆中
+    pd2 = new (buffer) double[N];
+    // 定位new运算符使用传递给它的地址，它不跟踪哪些内存单元被使用，也不查找为使用的内存块。
+    // 这将一些内存管理的任务将给了程序员
+    for (i = 0; i < N; i++)
+        pd2[i] = pd1[i] = 1000 + 20.0 * i;
+
+    cout << "Memory addresses:\n" << " heap: " << pd1
+        << "static: " << (void*)buffer << endl;
+    // 强制类型转换(void*)，对于char* cin将输出一个字符串 
+    
+    cout << "Memory contents:\n";
+    for (int i = 0; i < N; i++)
+    {
+        cout << pd1[i] << " at " << &pd1[i] << "; ";
+        cout << pd2[i] << " at " << &pd2[i] << endl;
+    }
+
+    cout << "\nCalling new and placement new a second time:\n";
+    double* pd3, * pd4;
+    pd3 = new double[N];
+    pd4 = new (buffer) double[N];
+    for (i = 0; i < N; i++)
+        pd3[i] = pd4[i] = 1000 + 40.0 * i;
+    cout << "Memory contents:\n";
+    for (i = 0; i < N; i++)
+    {
+        cout << pd3[i] << " at " << &pd1[i] << "; ";
+        cout << pd4[i] << " at " << &pd2[i] << endl;
+    }
+
+    cout << "\nCalling new and placement new a third time:\n";
+    delete[] pd1;
+    pd1 = new double[N];
+    pd2 = new (buffer + N * sizeof(double)) double[N];
+    // 定位在从数组buffer开头算起偏移一定距离的内存处 
+    for (i = 0; i < N; i++)
+        pd2[i] = pd1[i] = 1000 + 60.0 * i;
+    cout << "Memory contents:\n";
+    for (i = 0; i < N; i++)
+    {
+        cout << pd1[i] << " at " << &pd1[i] << "; ";
+        cout << pd2[i] << " at " << &pd2[i] << endl;
+    }
+    delete[] pd1;
+    delete[] pd3;
+    // 没有使用delete运算符清除pd2和pd4，因为buffer数组对应的内存位于静态内存处，在栈区
+    // 程序员通过定位new运算符将pd2和pd4指向一静态内存处，故对于pd2和pd4无需使用delete运算符，其遵循栈区内存管理规则
+    return 0;
+}
+```
+
+返回值如下，定位new运算符接受一个地址，并将其转化为void*类型，以便传递给任意类型的指针。
+
+```
+Calling new and placement new:
+Memory addresses:
+ heap: 00000198C5D42DD0static: 00007FF6449AF4A0
+Memory contents:
+1000 at 00000198C5D42DD0; 1000 at 00007FF6449AF4A0
+1020 at 00000198C5D42DD8; 1020 at 00007FF6449AF4A8
+1040 at 00000198C5D42DE0; 1040 at 00007FF6449AF4B0
+1060 at 00000198C5D42DE8; 1060 at 00007FF6449AF4B8
+1080 at 00000198C5D42DF0; 1080 at 00007FF6449AF4C0
+
+Calling new and placement new a second time:
+Memory contents:
+1000 at 00000198C5D42DD0; 1000 at 00007FF6449AF4A0
+1040 at 00000198C5D42DD8; 1040 at 00007FF6449AF4A8
+1080 at 00000198C5D42DE0; 1080 at 00007FF6449AF4B0
+1120 at 00000198C5D42DE8; 1120 at 00007FF6449AF4B8
+1160 at 00000198C5D42DF0; 1160 at 00007FF6449AF4C0
+
+Calling new and placement new a third time:
+Memory contents:
+1000 at 00000198C5D47F60; 1000 at 00007FF6449AF4C8
+1060 at 00000198C5D47F68; 1060 at 00007FF6449AF4D0
+1120 at 00000198C5D47F70; 1120 at 00007FF6449AF4D8
+1180 at 00000198C5D47F78; 1180 at 00007FF6449AF4E0
+1240 at 00000198C5D47F80; 1240 at 00007FF6449AF4E8
+```
+
+
+
+
 
 ## 9.3 名称空间
