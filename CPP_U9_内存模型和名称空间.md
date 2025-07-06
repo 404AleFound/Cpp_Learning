@@ -819,8 +819,299 @@ Memory contents:
 1240 at 00000198C5D47F80; 1240 at 00007FF6449AF4E8
 ```
 
+## 9.3 **名称空间**
 
+C++中名称可以是变量、函数、结构、枚举、类以及类和结构的成员。当随着项目增大时，名称相互冲突的可能性也将增加。为了解决名称冲突问题，引入名称空间。C++引入名称空间工具，以便更好地控制名称的作用域。
 
+### 9.3.1 声明区域和潜在作用域
 
+声明区域（declaration region）指可以在其中进行声明的区域。可以在函数外面声明全局变量，这种变量的声明区域为其声明所在的文件。可以在在函数内部声明的区域，这种变量的声明区域为其声明所在的代码块。
 
-## 9.3 名称空间
+潜在作用域（potential scope），变量的潜在作用域从声明点开始，到其声明区域的结尾。因此潜在区域比声明区域小。
+
+**变量并非在潜在作用域之内的任何位置都是可见的。例如，其可能被另一个在嵌套声明中声明的同名变量隐藏，函数中声明的局部变量将隐藏同一个文件中声明的全局变量，变量对程序而言可见的范围称为作用域。**
+
+### 9.3.2 新的名称空间特性
+
+通过定义一种新的声明区域来创建命名的名称空间，以提供一个声明名称的区域。一个名称空间中的名称不会与另外一个名称空间的相同名称发生冲突，同时允许程序的其他部分使用该名称空间中声明的东西。
+
+```c++
+namespace Jack {
+	double pail;
+	void fetch();
+	int pal;
+	struct Well {...}
+}
+namespace Jill {
+	double bucket(double n) {...}
+	double fetch;
+	int pal;
+	struct Hill {...};
+}
+```
+
+名称空间可以是全局的，也可以位于另外一个名称空间中，**但不能位于代码块中**。因此在默认情况下，在名称空间中声明的名称的链接性为外部的（除非它引用了变量）。
+
+除了用户定于的名称空间外，还存在一个名称空间——全局名称空间（global namespace）。它对应与文件级声明区域，因此前面说的全局变量现在被描述为位于全局名称空间中。
+
+任何名称空间中的名称都不会和其他名称空间中的名称冲突。名称空间中的声明和定义规则同全局声明和定义规则相同。
+
+名称空间是开放的，可以把名称加入到已有的名称空间中。例如，下面这条语句将名称goose添加到Jill已有的名称列表中
+
+```c++
+namespace Jill {
+	char * goose(const char *)
+}
+```
+
+同样，原来的Jack名称空间为fetch()函数提供了原型。可以在该文件的后面（或另一个文件中）再次使用Jack名称空间来提供该函数的代码。
+
+```C++
+namespace Jack {
+    void fetch()
+    {
+		...
+    }
+}
+```
+
+通过作用域解析运算符::，可以使用名称空间来限定该名称，以简化书写。
+
+```C++
+Jack::pail = 12.34;
+Jill::Hill mole;
+Jack::fetch();
+```
+
+未被修饰的名称称为未限定的名称，包含名称空间的名称称为限定的名称。
+
+### 9.3.3 using声明和using编译指令
+
+using声明使特定的标识符可用，using编译指令使整个名称空间可用。即，using声明使一个名称可用，而using编译指令使得所有的名称空间可用。
+
+```C++
+using Jill::fetch;
+// 该指令在函数外声明，则该名称在整个文件中都可用
+// 该指令在函数内声明，则该名称仅仅在该函数内部可用
+
+using namespace fetch;
+// 该指令使得名称空间中的所有名称均可用，而不需要使用作用域解析运算符
+// 在全局声明区域中使用using编译指令，将使该名称空间的名称全局可用
+// 在函数中使用using编译指令，将使其中的名称在该函数中可用
+```
+
+使用using编译命令和使用多个using声明是不一样的，而更像大量使用作用域解析运算符。
+
+* 使用using声明，就好像声明了相应的名称一样。如果某个名称已经在函数中声明了，则不能用using导入 相同的名称。
+* 然而，使用using编译指令，将进行名称解析，就像在包含using声明和名称空间本身的最小声明区域中声明了名称一样，局部名称将隐藏名称空间名。
+
+```C++
+namespace Jill {
+    double bucket(double n) { ... }
+    double fetch;
+    struct Hill { ... }
+}
+
+char fetch;
+int main()
+{
+    using namespace Jill;
+    Hill hrill;
+    double water = bucket(2);
+    double fetch;
+    cin >> fetch;// 将值填入局部fetch变量中
+    cin >> ::fetch;// 将值填入全局fetch变量中
+    cin >> Jill:fetch;// 将值填入Jill名称空间内的fetch变量中
+}
+ 
+int foom()
+{
+    Hill top;// 无效
+    Jill::Hill crest;// 有效
+}
+```
+
+对比下面代码块，对using声明和using编译做进一步说明。
+
+![image-20250706173529292](D:\JiangLe\CPP_Note\assets\image-20250706173529292.png)
+
+1、2、3代码中隐去了局部money的声明，对于使用域解析运算符`::`的变量来说，没有任何区别。1中由于为使用任何using指令，因此main()函数中money为全局变量money。2中使用using编译，此时名称空间Jill中的money和全局变量money在此处均可见，因此编译器无法区分代码中的money是哪个money，故报错。3中使用using声明，此时相当于创建了一个money变量，可用。
+
+4、5、6代码中单独声明了一个局部money变量，对于使用域解析运算符`::`的变量来说，没有任何影响。
+
+### 9.3.4 名称空间嵌套
+
+可以将名称空间进行嵌套
+
+```C++
+namespace elements
+{
+    namespace fire
+    {
+        int flame;
+        ...
+    }
+    float water;
+}
+```
+
+### 9.3.5 无命名名称空间
+
+可以通过省略名称空间的名称来创建未命名的名称空间。
+
+```C++
+namespace
+{
+    int ice;
+    int bandycoot;
+}
+```
+
+不能再未命名名称空间所属文件之外的其他文件中，使用该名称空间中的名称。这提供了链接性为内部的静态变量的替代品。
+
+### 9.3.65 名称空间示例
+
+```C++
+// namesp.h
+#include <string>
+
+namespace pers
+{
+	struct Person
+	{
+		std::string fname;
+		std::string lname;
+	};
+	void getPerson(Person&);
+	void showPerson(const Person&);
+}
+
+namespace debts
+{
+	using namespace pers;
+	struct Debt
+	{
+		Person name;
+		double amount;
+	};
+	void getDebt(Debt&);
+	void showDebt(const Debt&);
+	double sumDebts(const Debt ar[], int n);
+}
+```
+
+```C++
+// main.cpp
+#include <iostream>
+#include "namesp.h"
+void other(void);
+void another(void);
+
+int main(void)
+{
+	using debts::Debt;
+
+	using debts::showDebt;
+
+	Debt golf = { {"Benny", "Goatsniff"}, 120.0 };
+	showDebt(golf);
+	other();
+	another();
+	return 0;
+}
+
+void other(void)
+{
+	using std::cout;
+	using std::endl;
+	using namespace debts;
+	Person dg = { "Doodles", "Glister" };
+	showPerson(dg);
+	cout << endl;
+	Debt zippy[3];
+	int i;
+	for (i = 0; i < 3; i++)
+		getDebt(zippy[i]);
+
+	for (i = 0; i < 3; i++)
+		showDebt(zippy[i]);
+	cout << "Total debt: $" << sumDebts(zippy, 3) << endl;
+	return;
+}
+
+void another(void)
+{
+	using pers::Person;
+	Person collector = { "Milo", "Rightshift" };
+	pers::showPerson(collector);
+	std::cout << std::endl;
+}
+```
+
+```C++
+// namesp.cpp
+#include <iostream>
+#include "namesp.h"
+
+namespace pers
+{
+	using std::cout;
+	using std::cin;
+	void getPerson(Person & rp)
+	{
+		cout << "Enter first name: ";
+		cin >> rp.fname;
+		cout << "Enter last name: ";
+		cin >> rp.lname;
+	}
+	void showPerson(const Person & rp)
+	{
+		std::cout << rp.lname << ", " << rp.fname;
+	}
+}
+
+namespace debts
+{
+
+	void getDebt(Debt & rd)
+	{
+		getPerson(rd.name);
+		std::cout << "Enter debt: ";
+		std::cin >> rd.amount;
+	}
+	void showDebt(const Debt& rd)
+	{
+		showPerson(rd.name);
+		std::cout << ": $" << rd.amount << std::endl;
+	}
+	double sumDebts(const Debt ar[], int n)
+	{
+		double total = 0;
+		for (int i = 0; i < n; i++)
+			total += ar[i].amount;
+		return total;
+	}
+}
+```
+
+输出如下：
+
+```
+Goatsniff, Benny: $120
+Glister, Doodles
+Enter first name: Jack
+Enter last name: Brown
+Enter debt: 780
+Enter first name: Hellen
+Enter last name: Dan
+Enter debt: 320
+Enter first name: Bill
+Enter last name: Kuper
+Enter debt: 450
+Brown, Jack: $780
+Dan, Hellen: $320
+Kuper, Bill: $450
+Total debt: $1550
+Rightshift, Milo
+```
+
