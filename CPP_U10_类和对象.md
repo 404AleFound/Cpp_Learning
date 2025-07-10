@@ -565,4 +565,240 @@ void Stock::show() const
 
 当出现两个类对象时，且类方法可能涉及两个类对象时，需要使用`this`指针表明类方法中的对象分别是谁。
 
- 
+  C++使用被称为this的特殊指针，this指针指向用来调用成员函数的对象。
+
+每个成员函数（包括析构函数和构造函数）都有一个this指针。this指针指向调用对象。如果方法需要引用整个调用对象，则可以使用表达式`*this`。在函数的括号后面使用`const`限定符将`this`限定为从const，这样将不适用`this`来修改对象的值。
+
+注意，this是指向调用该函数的对象的指针，*this才是调用该函数的对象。
+
+```C++
+// stock02.h -- 根据Stock01.h修改
+#ifndef STOCK00_H_
+#define STOCK00_H_
+
+#include <string>
+
+class Stock
+{
+    private:
+    std::string company;
+    long shares;
+    double share_val;
+    double total_val;
+    void set_tot() { total_val = shares * share_val;}// private成员函数只能在类中定义
+    public:
+    // void acquire(const std::string  & co, long n, double pr);
+    // 使用构造函数代替acquire()函数
+    Stock();// 创建默认构造函数
+    Stock(const std::string  & co, long n = 0, double pr = 0.0);// 创建含参数的构造函数
+    ~Stock();// 创建析构函数
+    // 下面内容保持不变
+    void buy(long num, double price);
+    void sell(long num, double price);
+    void update(double price);
+    void show();
+    const Stock & topval(const Stock & s) const;
+};
+
+#endif
+```
+
+```c++
+// 单独topval()
+const Stock & topval(const Stock & s) const
+{
+	if (s.total_val > total_val)
+        return s;
+    else
+        return *this;
+}
+```
+
+## 10.4 对象数组
+
+和Stock示例一样，用户通常要创建同一个类的多个对象，此时使用对象数组将更加合适。声明对象数组的方法与声明标准类型数组相同。
+
+```C++
+Stock mystuff[4];
+```
+
+当程序创建未被显示初始化的类对象时，总是调用默认构造函数。上述声明要求，这个类要么没有显示地定义任何构造函数，要么定义了一个显示的默认构造函数。
+
+对象数组的每一个元素都可以使用该对象的成员函数。
+
+可以用构造函数来初始化数组元素。在这种情况下，必须为每个元素调用构造函数。
+
+```C++
+const int STKS = 4;
+Stock stocks[STKS] = {
+    Stock("NanoSmart", 12.5, 20),
+    Stock("Boffo Objects", 200, 2.0),
+    Stock("Monolithic Obelisks", 130, 3.25),
+    Stock("Fleep Enterprises", 60, 6.5)
+};
+```
+
+这里使用标准格式对数组进行初始化：用括号括起的、以逗号分隔的值列表。其中，每次构造函数调用表示一个值。如果类包含多个构造函数，则可以对不同元素使用不同的构造函数：
+
+```C++
+const int STKS = 10;
+Stock stocks[STKS] = {
+    Stock("NanoSmart", 12.5, 20),
+    Stock(),
+    Stock("Monolithic Obelisks", 130, 3.25),
+};
+```
+
+上述代码仅仅初始化了数组对象中的3个元素，剩下的7个元素将使用类默认的构造函数进行初始化。
+
+初始化对象数组的方案是，首先使用默认构造函数创建数组元素，然后花括号中的构造函数将创建临时对象，然后将临时对象的内容复制到相应元素中。**因此要创建类对象数组，则这个类必须有默认构造函数。**
+
+```C++
+#include <iostream>
+#include "stock20.h"
+```
+
+
+
+## 10.5 类作用域
+
+在类中定义的名称的作用域为整个类，作用域为整个类的名称只在该类中是已知的，在类外是不已知的。
+
+* 可以在不同类中使用相同的类成员名而不会引起冲突。
+* 不能从外部直接访问类的成员，必须通过对象。
+* 在定义成员函数时，必须使用作用域解析符。
+* 在类中声明或成员函数定义中，可以使用未修饰的成员名称（未限定类的名称），。构造函数名称被调用时，才能被识别，因为它的名称与类名相同。其他情况下，使用类成员名时，必须更具上下文使用直接成员运算符(.)、间接成员运算符(->)或作用域解析运算符(::)。
+
+**所用域为类的常量**
+
+当类的所有对象公用某一常量值时，可以创建一个由所有对象共享的常量。注意声明对象只是描述了对象的形式，没有创建对象。因此在创建对象前，将没有用于存储值的空间，故下面代码是不可行的。
+
+```C++
+class Bakery
+{
+private:
+    const int Months = 12;
+    double cost[Months];
+    ...
+}
+```
+
+C++使用两种方式实现这个目标。
+
+一种是在类中声明一个枚举。
+
+```C++
+class Bakery
+{
+private:
+    enum {Months = 12};
+    double cost[Months];
+    ...
+}
+```
+
+在类声明中声明的枚举的作用域为整个类，因此可以用枚举为整型常量提供作用域为整个类的符号名称。
+
+注意这种方法声明的枚举并不会创建类数据成员。也就是说，所有对象中都不包含枚举。
+
+由于这里使用枚举只是为了创建符号常量，并不打算创建枚举类型的变量，因此不需要提供枚举名。
+
+另一种方法是在类中创建静态成员变量。
+
+```c++
+class Bakery
+{
+private:
+    static const int Months = 12;
+    double cost[Months];
+    ...
+}
+```
+
+## 10.6 抽象数据类型
+
+栈的特征，首先栈存储了多个数据项，其次栈由可对它执行的操作进行描述。
+
+* 可创建空栈
+* 可将数据项添加到栈顶
+* 可从栈顶删除数据项
+* 可查看栈是否填满
+* 可查看栈是否为空
+
+就计算机专家们所说的抽象数据类型而言，使用类是一种非常好的方法。
+
+```c++
+#ifndef STACK_H_
+#define StACK_h_
+
+typedef unsigned long Item;
+
+class Stack
+{
+private:
+    enum {MAX = 10};
+    // 定义了一个枚举常量MAX，其值为10。这表示栈的最大容量为10个元素。
+    Item items[MAX];
+    // 是一个数组，用于存储栈中的元素，其类型为Item，大小为MAX。
+    int top;
+    // 是一个整型变量，用于表示栈顶的索引。初始时，栈为空，top的值通常为-1。
+public:
+    Stack();
+    // 是一个整型变量，用于表示栈顶的索引。初始时，栈为空，top的值通常为-1。
+    bool isempty() const;
+    // 是一个函数，用于判断栈是否为空。如果栈为空，返回true；否则返回false。
+    bool isfull() const;
+    // 是一个函数，用于判断栈是否已满。如果栈已满，返回true；否则返回false。
+    bool push(const Item & item);
+    // 是一个函数，用于将元素item压入栈中。如果压栈成功，返回true；如果栈已满，无法压栈，返回false。
+    bool pop(Item & item);
+    // 是一个函数，用于从栈中弹出栈顶元素，并将其存储在item中。如果出栈成功，返回true；如果栈为空，无法出栈，返回false。
+}
+#endif
+```
+
+私有部分表明，栈是使用数组实现的；而公有部分隐藏了这一点。因此，可以使用动态数组来代替数组，而不会改变类的接口。这意味着修改栈的实现后，不需要重新编写使用栈的程序，而只需要重新编译栈代码，并将其与已有的程序代码链接起来即可。
+
+以下为栈类的具体实现方法。
+
+```C++
+#include "stack.h"
+Stack::Stack()
+{
+    top = 0;
+}
+
+bool Stack::isempty() const
+{
+    return top == 0;
+}
+// 默认构造函数确保所有栈被创建时都为空
+
+bool Stack::isfull() const
+{
+    return top == MAX;
+}
+
+bool Stack::push(const Item & item)
+{
+	if (top < MAX)
+    {
+        items[top++] = item;
+        return true;
+    }
+    else
+        return false;
+}
+
+bool Stack::pop(Otem & item)
+{
+	if (top > 0)
+    {
+		item = items[--top];
+        return true;
+    }
+    else
+        return false;
+}
+```
+
