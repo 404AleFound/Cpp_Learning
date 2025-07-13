@@ -1,0 +1,5 @@
+# 忽略 XMind 文件
+*.xmind
+
+# 忽略 PowerPoint 文件
+*.pptx
