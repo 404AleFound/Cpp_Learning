@@ -6,7 +6,7 @@
 
 在编写程序的过程中，将所有代码都写在一个文件中可能会导致代码冗余，可读性下降。C++允许程序员将组件函数放在独立的文件中，并单独编译这些文件，然后将它们链接成可执行的程序。
 
-<img src="D:\JiangLe\02_Dynamic_Repo_Github\02_CPP_Note\CPP_U09_内存模型和名称空间\assets\C++文件结构.png" style="zoom: 40%;" />
+<img src="D:\JiangLe\02_Dynamic_Repo_Github\02_CPP_Notes\CPP_U09_内存模型和名称空间\assets\C++文件结构.png" style="zoom: 40%;" />
 
 如上图所示，程序员常常将原来的程序分为三个部分:**头文件**、**包含定义结构有关函数的源代码文件**、**包含调用结构有关函数的源代码文件**。**头文件**、**包含定义结构有关函数的源代码文件**被称为软件包，可以被用于各种应用之中。不要将**非内联函数**在函数定义或变量声明放到头文件中。因为，如果在头文件中包含一个函数定义，然后在同属于这个工程的另外两个文件中包含该头文件，会导致一个程序包含同一个函数的两个定义。
 
@@ -18,7 +18,7 @@
 | :----------------------------------------------: | ------------------------------------------------- | ------------------------------------------------ |
 | [coordin.h](./examples/code-list-9-01-coordin.h) | [file1.cpp ](./examples/code-list-9-02-file1.cpp) | [file2.cpp](./examples/code-list-9-03-file2.cpp) |
 
-<img src="D:\JiangLe\02_Dynamic_Repo_Github\02_CPP_Note\CPP_U09_内存模型和名称空间\assets\三文件编译组织架构.png" style="zoom:50%;" />
+<img src="D:\JiangLe\02_Dynamic_Repo_Github\02_CPP_Notes\CPP_U09_内存模型和名称空间\assets\三文件编译组织架构.png" style="zoom:50%;" />
 
 ## 9.2 内存模型
 
@@ -94,7 +94,7 @@ register int count_fast;
 >
 > **注意，**静态持续性指变量在整个代码执行间存在。由于静态变量的数目在程序运行期间是不变的，编译器将分配固定的内存块来存储所有的静态变量，因此不需要使用特殊的装置来管理它们。
 
-<img src="D:\JiangLe\02_Dynamic_Repo_Github\02_CPP_Note\CPP_U09_内存模型和名称空间\assets\静态变量创建类型.png" style="zoom: 33%;" />
+<img src="D:\JiangLe\02_Dynamic_Repo_Github\02_CPP_Notes\CPP_U09_内存模型和名称空间\assets\静态变量创建类型.png" style="zoom: 33%;" />
 
 **静态变量的初始化**
 
@@ -109,7 +109,7 @@ register int count_fast;
 >
 > **注意，**零初始化对于不同类型的对象具有不同含义。例如，对于指针，其被默认初始化为指针意义中的0，并非数字0。
 
-<img src="D:\JiangLe\02_Dynamic_Repo_Github\02_CPP_Note\CPP_U09_内存模型和名称空间\assets\静态变量初始化.png" style="zoom: 33%;" />
+<img src="D:\JiangLe\02_Dynamic_Repo_Github\02_CPP_Notes\CPP_U09_内存模型和名称空间\assets\静态变量初始化.png" style="zoom: 33%;" />
 
 **静态持续性、外部链接性**
 
@@ -146,8 +146,8 @@ extern int fleas;// 同上
 
 下面是使用外部链接的静态变量的例子。
 
-| code-list-9-05                                         | code-list-9-06                                       |
-| ------------------------------------------------------ | ---------------------------------------------------- |
+|                     code-list-9-05                     | code-list-9-06                                       |
+| :----------------------------------------------------: | ---------------------------------------------------- |
 | [external.cpp](./examples/code-list-9-05-external.cpp) | [support.cpp](./examples/code-list-9-06-support.cpp) |
 
 **静态持续性、内部链接性**
@@ -170,127 +170,21 @@ static int errors = 5;
 // 这种声明是合法的，虽然其名字和另一个文件中声明的常规外部变量相同。
 // 该文件中，静态变量将隐藏常规的外部变量
 // 没有违反单定义规则，这里关键字static指出变量是内部的。
-
 ```
 
 可使用链接性为外部的静态变量在多文件程序的不同部分之间共享数据；使用链接性为内部的静态变量在同一个文件中的多个函数之间共享数据。
 
-```c++
-#include <iostream>
-int tom = 3;
-int dick = 30;
-static int harry = 300;
-
-void remote_access();
-
-int main()
-{
-	using namespace std;
-    cout << "main() reports the following addresses:\n";
-    cout << &tom << " = &tom, " << &dick << " = &dick, ";
-    cout << &harry << " = &harry\n";
-    remote_access();
-    return 0;
-}
-```
-
-```c++
-#include <iostream>
-extern int tom;
-static int dick = 10;
-int harry = 200;
-
-void remote_access()
-{
-    using namespace std;
-    cout << "remote_access() reports the following addresses:\n";
-    cout << &tom << " = &tom, " << &dick << " = &dick, ";
-    cout << &harry << " = &harry\n";
-}
-```
-
-输出如下：
-
-```
-main() reports the following addresses:
-00007FF6F6F5E00C = &tom, 00007FF6F6F5E010 = &dick, 00007FF6F6F5E014 = &harry
-remote_access() reports the following addresses:
-00007FF6F6F5E00C = &tom, 00007FF6F6F5E004 = &dick, 00007FF6F6F5E000 = &harry
-```
+|                     code-list-9-07                     |                     code-list-9-08                     |
+| :----------------------------------------------------: | :----------------------------------------------------: |
+| [twofile1.cpp](./examples/code-list-9-07-twofile1.cpp) | [twofile2.cpp](./examples/code-list-9-08-twofile2.cpp) |
 
 **静态持续性、无链接性**
 
 将static限定符用于在代码块中定义的变量。这意味这该变量虽然只在该代码块中可用，但它在该代码块中不处于活动状态时仍然存在。另外如果初始化了静态局部变量，则程序只在启动时进行一次初始化，以后再调用函数时，不会像自动变量那样再次被初始化。
 
-```C++
-#include <iostream>
-const int ArSize = 10;
-
-void strcount(const char* str);
-
-int main()
-{
-    using namespace std;
-    char input[ArSize];
-    char next;
-
-    cout << "Enter a line:\n";
-    cin.get(input, ArSize);
-    while (cin)
-    {
-        cin.get(next);
-        while (next != '\n')
-            cin.get(next);
-        strcount(input);
-        cout << "Enter next line (empty line to quit):\n";
-        cin.get(input, ArSize);
-    }
-    cout << "Bye\n";
-    return 0;
-}
-
-void strcount(const char* str)
-{
-    using namespace std;
-    static int total = 0;
-    int count = 0;
-
-    cout << "\"" << str << "\" contains ";
-    while (*str++)//equal to while (*(str++))
-        count++;
-    total += count;
-    cout << count << " characters\n";
-    cout << total << " characters total\n";
-}
-```
-
-输出如下：
-
-```
-Enter a line:
-ffffffffffffffffffff
-"fffffffff" contains 9 characters
-9 characters total
-Enter next line (empty line to quit):
-aaaaaaaaaaaaaaaaaaaaaaaa
-"aaaaaaaaa" contains 9 characters
-18 characters total
-Enter next line (empty line to quit):
-ffffffffffffffff
-"fffffffff" contains 9 characters
-27 characters total
-Enter next line (empty line to quit):
-aaaaaaaaaaaaaaaaaaaaaaaa
-"aaaaaaaaa" contains 9 characters
-36 characters total
-Enter next line (empty line to quit):
-
-Bye
-```
-
- 方法`cin.get(input, ArSize)`将一直读取输入，直到到达行尾或者读取了`ArSize-1`个字符为止。它把换行符留在输入队列中。该程序使用`cin.get(next)`读取行输入后的字符。如果`next`是换行符，则说明`cin.get(input, ArSize)`读取了整行；否则说明行中还有字符没有被读取。随后，程序使用一个循环来丢弃余下的字符，不过可以修改代码，使得下一轮输入读取行中余下的字符。程序在试图使用`get(char*, int)`读取空行时，将导致`cin`为false。
-
-静态变量total只在程序运行时被设置为0，以后在两次函数调用之间，其值将保持不变，因此能够记录读取的字符总数。
+|                   code-list-9-09                   |
+| :------------------------------------------------: |
+| [static.cpp](./examples/code-list-9-09-static.cpp) |
 
 ### 9.2.4 说明符和限定符
 
@@ -366,7 +260,7 @@ static int private(double x)
 
 链接程序要求每个不同的函数都有不同的符号名。C++中一个函数名可能对应多个函数，必须将这些函数翻译为不同的符号名称。因此C++编译器执行名称矫正或名称修饰，为重载函数生成不同的符号名称。例如可能将`spiff(int)`转换为`_spiff_i()`，而将`spiff(double, double)`转换为`_spiff_d_d()`。这种方法被称为C++语言链接。略略略，看不懂了。
 
-### 9.2.7 存储方案和动态分配  
+### 9.2.7 动态变量
 
 前面介绍C++用来为变量分配内存的几种方案，它们不适用于使用C++new运算符的分配内存的情况，这种内存称之为动态内存。动态内存通过运算符new和delete控制，而不是由作用域和链接性规则控制。因此可以在一个函数中分匹配动态内存，而在另外一个函数中将其释放。与自动变量不同，动态变量对应的动态内存不是后进先出的LIFO结构，其分配和释放顺序要取决与new和delete在何时以何种方式被使用。通常，编译器使用三块独立的内存：一块用于静态变量，一块用于自动变量，一块用于动态变量。
 
@@ -470,171 +364,73 @@ int main()
 
 下面程序说明常规new运算符和定位new运算符之间的一些重要差别。
 
-```c++
-#include <iostream>
-#include <new>
-
-const int BUF = 512;
-const int N = 5;
-
-char buffer[BUF];
-
-int main()
-{
-    using namespace std;
-    double* pd1, * pd2;
-    int i;
-    cout << "Calling new and placement new:\n";
-    pd1 = new double[N];
-    // 常规new将数组pd1放在很远的地方，其地址为00000198C5D42DD0，位于动态管理的堆中
-    pd2 = new (buffer) double[N];
-    // 定位new运算符使用传递给它的地址，它不跟踪哪些内存单元被使用，也不查找为使用的内存块。
-    // 这将一些内存管理的任务将给了程序员
-    for (i = 0; i < N; i++)
-        pd2[i] = pd1[i] = 1000 + 20.0 * i;
-
-    cout << "Memory addresses:\n" << " heap: " << pd1
-        << "static: " << (void*)buffer << endl;
-    // 强制类型转换(void*)，对于char* cin将输出一个字符串 
-    
-    cout << "Memory contents:\n";
-    for (int i = 0; i < N; i++)
-    {
-        cout << pd1[i] << " at " << &pd1[i] << "; ";
-        cout << pd2[i] << " at " << &pd2[i] << endl;
-    }
-
-    cout << "\nCalling new and placement new a second time:\n";
-    double* pd3, * pd4;
-    pd3 = new double[N];
-    pd4 = new (buffer) double[N];
-    for (i = 0; i < N; i++)
-        pd3[i] = pd4[i] = 1000 + 40.0 * i;
-    cout << "Memory contents:\n";
-    for (i = 0; i < N; i++)
-    {
-        cout << pd3[i] << " at " << &pd1[i] << "; ";
-        cout << pd4[i] << " at " << &pd2[i] << endl;
-    }
-
-    cout << "\nCalling new and placement new a third time:\n";
-    delete[] pd1;
-    pd1 = new double[N];
-    pd2 = new (buffer + N * sizeof(double)) double[N];
-    // 定位在从数组buffer开头算起偏移一定距离的内存处 
-    for (i = 0; i < N; i++)
-        pd2[i] = pd1[i] = 1000 + 60.0 * i;
-    cout << "Memory contents:\n";
-    for (i = 0; i < N; i++)
-    {
-        cout << pd1[i] << " at " << &pd1[i] << "; ";
-        cout << pd2[i] << " at " << &pd2[i] << endl;
-    }
-    delete[] pd1;
-    delete[] pd3;
-    // 没有使用delete运算符清除pd2和pd4，因为buffer数组对应的内存位于静态内存处，在栈区
-    // 程序员通过定位new运算符将pd2和pd4指向一静态内存处，故对于pd2和pd4无需使用delete运算符，其遵循栈区内存管理规则
-    return 0;
-}
-```
-
 返回值如下，定位new运算符接受一个地址，并将其转化为void*类型，以便传递给任意类型的指针。
-
-```
-Calling new and placement new:
-Memory addresses:
- heap: 00000198C5D42DD0static: 00007FF6449AF4A0
-Memory contents:
-1000 at 00000198C5D42DD0; 1000 at 00007FF6449AF4A0
-1020 at 00000198C5D42DD8; 1020 at 00007FF6449AF4A8
-1040 at 00000198C5D42DE0; 1040 at 00007FF6449AF4B0
-1060 at 00000198C5D42DE8; 1060 at 00007FF6449AF4B8
-1080 at 00000198C5D42DF0; 1080 at 00007FF6449AF4C0
-
-Calling new and placement new a second time:
-Memory contents:
-1000 at 00000198C5D42DD0; 1000 at 00007FF6449AF4A0
-1040 at 00000198C5D42DD8; 1040 at 00007FF6449AF4A8
-1080 at 00000198C5D42DE0; 1080 at 00007FF6449AF4B0
-1120 at 00000198C5D42DE8; 1120 at 00007FF6449AF4B8
-1160 at 00000198C5D42DF0; 1160 at 00007FF6449AF4C0
-
-Calling new and placement new a third time:
-Memory contents:
-1000 at 00000198C5D47F60; 1000 at 00007FF6449AF4C8
-1060 at 00000198C5D47F68; 1060 at 00007FF6449AF4D0
-1120 at 00000198C5D47F70; 1120 at 00007FF6449AF4D8
-1180 at 00000198C5D47F78; 1180 at 00007FF6449AF4E0
-1240 at 00000198C5D47F80; 1240 at 00007FF6449AF4E8
-```
 
 ## 9.3 **名称空间**
 
 C++中名称可以是变量、函数、结构、枚举、类以及类和结构的成员。当随着项目增大时，名称相互冲突的可能性也将增加。为了解决名称冲突问题，引入名称空间。C++引入名称空间工具，以便更好地控制名称的作用域。
 
-### 9.3.1 声明区域和潜在作用域
+### 9.3.1 声明区域、潜在作用域及作用域
 
-声明区域（declaration region）指可以在其中进行声明的区域。可以在函数外面声明全局变量，这种变量的声明区域为其声明所在的文件。可以在在函数内部声明的区域，这种变量的声明区域为其声明所在的代码块。
+| 概念                           | 描述                                                         |
+| ------------------------------ | ------------------------------------------------------------ |
+| 声明区域（declaration region） | 指可以在其中进行声明的区域。在函数外面声明全局变量，这种变量的声明区域为其声明所在的文件；在函数内部声明的区域，这种变量的声明区域为其声明所在的代码块。 |
+| 潜在作用域（potential scope）  | 指从声明点开始，到其声明区域的结尾在区域。小于声明区域。     |
+| 作用域（scope）                | 指变量对程序而言可见的范围。变量并非在潜在作用域之内的任何位置都是可见的。例如，其可能被另一个在嵌套声明中声明的同名变量隐藏，函数中声明的局部变量将隐藏同一个文件中声明的全局变量。 |
 
-潜在作用域（potential scope），变量的潜在作用域从声明点开始，到其声明区域的结尾。因此潜在区域比声明区域小。
+下面这张图就很好的展示了上面这三个概念。
 
-**变量并非在潜在作用域之内的任何位置都是可见的。例如，其可能被另一个在嵌套声明中声明的同名变量隐藏，函数中声明的局部变量将隐藏同一个文件中声明的全局变量，变量对程序而言可见的范围称为作用域。**
+<img src="./assets/声明区域_作用域_潜在作用域.png" style="zoom: 33%;" />
+
+上述概念体现了C++中一种名称空间层次。每一个声明区域都可以声明名称，这些名称独立于在其他声明中声明的名称。在一个函数中声明的局部变量不会和在另一个函数中声明的局部变量发生冲突。
 
 ### 9.3.2 新的名称空间特性
 
-通过定义一种新的声明区域来创建命名的名称空间，以提供一个声明名称的区域。一个名称空间中的名称不会与另外一个名称空间的相同名称发生冲突，同时允许程序的其他部分使用该名称空间中声明的东西。
+C++丰富了名称空间的功能，可以创建一种具有名称的声明区域。这使得一个名称空间中的名称不会与另外一个名称空间的相同名称发生冲突，同时允许程序的其他部分使用该名称空间中声明的东西。下面代码分别使用关键字`namespace`创建了一个名称空间：`Jack`。
 
-```c++
-namespace Jack {
-	double pail;
-	void fetch();
-	int pal;
-	struct Well {...}
-}
-namespace Jill {
-	double bucket(double n) {...}
-	double fetch;
-	int pal;
-	struct Hill {...};
-}
-```
+<img src="./assets/名称空间命名及对应声明区域.png" style="zoom:33%;" />
 
-名称空间可以是全局的，也可以位于另外一个名称空间中，**但不能位于代码块中**。因此在默认情况下，在名称空间中声明的名称的链接性为外部的（除非它引用了变量）。
+除了用户定的名称空间外，还存在一个名称空间——全局名称空间（global namespace）。它对应与文件级声明区域，因此前面说的全局变量现在被描述为位于全局名称空间中。
 
-除了用户定于的名称空间外，还存在一个名称空间——全局名称空间（global namespace）。它对应与文件级声明区域，因此前面说的全局变量现在被描述为位于全局名称空间中。
-
-任何名称空间中的名称都不会和其他名称空间中的名称冲突。名称空间中的声明和定义规则同全局声明和定义规则相同。
-
-名称空间是开放的，可以把名称加入到已有的名称空间中。例如，下面这条语句将名称goose添加到Jill已有的名称列表中
-
-```c++
-namespace Jill {
-	char * goose(const char *)
-}
-```
-
-同样，原来的Jack名称空间为fetch()函数提供了原型。可以在该文件的后面（或另一个文件中）再次使用Jack名称空间来提供该函数的代码。
-
-```C++
-namespace Jack {
-    void fetch()
-    {
-		...
-    }
-}
-```
-
-通过作用域解析运算符::，可以使用名称空间来限定该名称，以简化书写。
-
-```C++
-Jack::pail = 12.34;
-Jill::Hill mole;
-Jack::fetch();
-```
-
-未被修饰的名称称为未限定的名称，包含名称空间的名称称为限定的名称。
+> [!NOTE]
+>
+> 名称空间可以是全局的，也可以位于另外一个名称空间中，**但不能位于代码块中**。因此在默认情况下，在名称空间中声明的名称的链接性为外部的（除非它引用了变量）。
+>
+> 任何名称空间中的名称都不会和其他名称空间中的名称冲突。名称空间中的声明和定义规则同全局声明和定义规则相同。
+>
+> 名称空间是开放的，可以把名称加入到已有的名称空间中。例如，下面这条语句将名称goose添加到Jill已有的名称列表中
+>
+> ```c++
+> namespace Jill {
+> 	char * goose(const char *)
+> }
+> ```
+>
+> 同样，原来的Jack名称空间为fetch()函数提供了原型。可以在该文件的后面（或另一个文件中）再次使用Jack名称空间来提供该函数的代码。
+>
+> ```C++
+> namespace Jack {
+>     void fetch()
+>     {
+> 		...
+>     }
+> }
+> ```
+>
+> 通过作用域解析运算符::，可以使用名称空间来限定该名称，以简化书写。
+>
+> ```C++
+> Jack::pail = 12.34;
+> Jill::Hill mole;
+> Jack::fetch();
+> ```
+>
+> 未被修饰的名称称为未限定的名称，包含名称空间的名称称为限定的名称。
+>
 
 ### 9.3.3 using声明和using编译指令
+
+在实际使用中，并不希望每次使用名称时都要对其进行限定，因此C++提供了两种机制（using声明和using编译指令）。
 
 using声明使特定的标识符可用，using编译指令使整个名称空间可用。即，using声明使一个名称可用，而using编译指令使得所有的名称空间可用。
 
@@ -682,11 +478,13 @@ int foom()
 
 对比下面代码块，对using声明和using编译做进一步说明。
 
-![image-20250706173529292](D:\JiangLe\CPP_Note\assets\image-20250706173529292.png)
+![](./assets/using编译和using声明对比.png)
 
-1、2、3代码中隐去了局部money的声明，对于使用域解析运算符`::`的变量来说，没有任何区别。1中由于为使用任何using指令，因此main()函数中money为全局变量money。2中使用using编译，此时名称空间Jill中的money和全局变量money在此处均可见，因此编译器无法区分代码中的money是哪个money，故报错。3中使用using声明，此时相当于创建了一个money变量，可用。
-
-4、5、6代码中单独声明了一个局部money变量，对于使用域解析运算符`::`的变量来说，没有任何影响。
+> [!NOTE]
+>
+> 1、2、3代码中隐去了局部money的声明，对于使用域解析运算符`::`的变量来说，没有任何区别。1中由于未使用任何using指令，因此main()函数中money为全局变量money。2中使用using编译，此时名称空间Jill中的money和全局变量money在此处均可见，因此编译器无法区分代码中的money是哪个money，故报错。3中使用using声明，此时相当于创建了一个money变量，可用。
+>
+> 4、5、6代码中单独声明了一个局部money变量，对于使用域解析运算符`::`的变量来说，没有任何影响。
 
 ### 9.3.4 名称空间嵌套
 
