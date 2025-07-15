@@ -165,13 +165,30 @@ StringBad & StringBad::operator = (const StringBad & st)
 }
 ```
 
-## `StringBad`类的改进
+## `StringBad`类改进为`String`类
 
 经过上述补充后，可以对`StringBad`类进行改进，改进后的文件如下：
 
 | code-list-12-04                                   | code-list-12-05                                       | code-list-12-06                                         |
 | ------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------- |
 | [string1.h](./examples/code-list-12-04-string1.h) | [string1.cpp](./examples/code-list-12-05-string1.cpp) | [sayings1.cpp](./examples/code-list-12-06-sayings1.cpp) |
+
+在原有的基础上，需要进行**修改**。首先，添加自定义的复制构造函数和赋值运算符，将浅拷贝修正为深拷贝；其次，使类构造函数和析构函数保持沉默；最后，简化默认构造函数，使之创建一个空字符。
+
+接下来，需要再**添加**一些新内容。添加的新方法需要使得String类能够包含标准字符串`cstring`的所有功能。
+
+| 函数声明                                                     | 函数解释                     |
+| ------------------------------------------------------------ | ---------------------------- |
+| `int length () const {return len;}`                          | 用于对string类对象计数       |
+| `friend bool operator<(const String &st, const String &st2);` | 友元函数，重载比较运算符     |
+| `friend bool operator>(const String &st, const String &st2);` | 友元函数，重载比较运算符     |
+| `friend bool operator==(const String &st, const String &st2);` | 友元函数，重载等价运算符     |
+| `friend opereator >>(istream & is, String & st);`            | 友元函数，重载比较输出运算符 |
+| `char & operator[](int i);`                                  | 提供了使用数组访问的方式     |
+| `const char & operator[](int i) const`                       | 提供了使用数组访问的方式     |
+| `static int HowMany();`                                      | 补充静态类数据成员           |
+
+
 
 ## 函数的返回对象
 
