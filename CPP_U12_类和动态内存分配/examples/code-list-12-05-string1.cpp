@@ -1,7 +1,7 @@
 // strngbad.cpp -- StringBad class methods
 #define _CRT_SECURE_NO_WARNINGS
 # include <cstring>
-# include "code-list-12-04-string1.h"
+# include "string1.h"
 using std::cout;
 using std::cin;
 
@@ -25,7 +25,7 @@ String::String()
 // 为了和析构函数delete [] str;保持兼容
 	len = 0;
 	str = new char[1];
-	str[0] = '\0';
+	std::strcpy(str, "\0");
 	num_strings++;
 }
 
@@ -121,13 +121,7 @@ std::ostream& operator <<(ostream& os, const String& st)
 
 std::istream& operator >>(istream& is, String& st)
 {
-// istream操作方法
-	char temp[String::CINLIM];
-	is.get(temp, String::CINLIM);
-	if (is)
-		st = temp;
-	while (is && is.get() != '\n')
-		continue;
+	is >> st.str;
 	return is;
 }
 // ============================================

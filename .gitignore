@@ -3,3 +3,10 @@
 
 # 忽略 PowerPoint 文件
 *.pptx
+
+# 忽略 Powershell 脚本文件
+*.ps1
+
+# 忽略 cpp工程文件夹
+/*/examples/build/
+/*/solutions/*/build/
