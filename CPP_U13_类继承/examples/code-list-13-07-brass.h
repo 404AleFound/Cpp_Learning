@@ -23,7 +23,7 @@ public:
 // 返回余额函数
 	double Balance() const;
 // 类析构函数
-	virtual ~Brass();
+	virtual ~Brass() {};
 };
 
 
@@ -42,7 +42,7 @@ public:
 	BrassPlus(const std::string& s = "Nullbody", long a = -1, double bal = 0.0, double ml = 500, double r = 0.11125);
 	BrassPlus(const Brass& ba, double ml = 500, double r = 0.11125);
 
-	//virtual void ViewAcct() const;
+	virtual void ViewAcct() const;
 	virtual void Withdraw(double amt);
 
 	void ResetMax(double m) { maxLoan = m; }

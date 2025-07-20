@@ -91,19 +91,19 @@ BrassPlus::BrassPlus(const Brass& ba, double ml, double r) : Brass(ba)
 	owesBank = 0.0;
 }
 
-//void BrassPlus::ViewAcct() const
-//{
-//	format initialState = setFormat();
-//	precis prec = cout.precision(2);
-//
-//	Brass::ViewAcct();
-//	cout << "Maximum loan: $" << maxLoan << endl;
-//	cout << "Owed to bank: $" << owesBank << endl;
-//	cout.precision(3);
-//	cout << "Load Rate: " << 100 * rate << "%\n";
-//
-//	restore(initialState, prec);
-//}
+void BrassPlus::ViewAcct() const
+{
+	format initialState = setFormat();
+	precis prec = cout.precision(2);
+
+	Brass::ViewAcct();
+	cout << "Maximum loan: $" << maxLoan << endl;
+	cout << "Owed to bank: $" << owesBank << endl;
+	cout.precision(3);
+	cout << "Load Rate: " << 100 * rate << "%\n";
+
+	restore(initialState, prec);
+}
 
 void BrassPlus::Withdraw(double amt)
 {
@@ -114,7 +114,6 @@ void BrassPlus::Withdraw(double amt)
 		Brass::Withdraw(amt);
 	else if ((amt > bal) && (amt <= bal + maxLoan - owesBank))
 	{
-		Brass::Withdraw(bal);
 		double advance = amt - bal;
 		owesBank += advance * (1.0 + rate);
 		Deposit(advance);
