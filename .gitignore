@@ -8,5 +8,6 @@
 *.ps1
 
 # 忽略 cpp工程文件夹
-/*/examples/build/
-/*/solutions/*/build/
+/CS106L_2025_Assignments
+/CS106L_2025_Slides
+/projects
